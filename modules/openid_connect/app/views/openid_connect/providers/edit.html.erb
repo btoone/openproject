@@ -1,11 +1,11 @@
-<% html_title(t(:label_administration), t('openid_connect.providers.label_edit')) -%>
+<% page_title = t('openid_connect.providers.label_edit', name: @provider.name) %>
+<% html_title(t(:label_administration), page_title) -%>
 <% local_assigns[:additional_breadcrumb] = [
   link_to(t('openid_connect.providers.plural'), url_for(action: :index)),
-  t('openid_connect.providers.label_edit')
-  ]
-%>
+  page_title
+] %>
 
-<%= toolbar title: t('openid_connect.providers.label_edit', name: @provider.name) %>
+<%= toolbar title: page_title %>
 
 <%= error_messages_for @provider %>
 
