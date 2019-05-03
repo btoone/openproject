@@ -52,7 +52,7 @@ module OpenIDConnect
       return false unless valid?
       config = Setting.plugin_openproject_openid_connect
       config["providers"] ||= {}
-      config["providers"][name] = omniauth_provider.to_h
+      config["providers"][name] = omniauth_provider.to_h.stringify_keys
       Setting.plugin_openproject_openid_connect = config
       true
     end
