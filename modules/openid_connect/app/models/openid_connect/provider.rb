@@ -1,0 +1,73 @@
+module OpenIDConnect
+  # FIXME: make this a proper ActiveRecord model instead of storing in the settings?
+  # FIXME: allow editing of advanced fields (e.g. scope, urls, etc.)
+  # FIXME: allow adding other types of providers than what's built-in?
+  # FIXME: merge omniauth-openid_connect-providers with this?
+  class Provider
+    ALLOWED_TYPES = ["azure", "google"].freeze
+
+    class NewProvider < OpenStruct
+      def to_h
+        @table
+      end
+    end
+
+    extend ActiveModel::Naming
+    include ActiveModel::Conversion
+    extend ActiveModel::Translation
+    attr_reader :errors, :omniauth_provider
+
+    delegate :name, to: :omniauth_provider, allow_nil: true
+    delegate :identifier, to: :omniauth_provider, allow_nil: true
+    delegate :secret, to: :omniauth_provider, allow_nil: true
+    delegate :scope, to: :omniauth_provider, allow_nil: true
+    delegate :to_h, to: :omniauth_provider, allow_nil: false
+
+    def initialize(omniauth_provider)
+      @omniauth_provider = omniauth_provider
+      @errors = ActiveModel::Errors.new(self)
+    end
+
+    def self.initialize_with(params)
+      self.new(NewProvider.new(params))
+    end
+
+    def persisted?
+      omniauth_provider.kind_of?(OmniAuth::OpenIDConnect::Provider)
+    end
+
+    def id
+      return nil unless persisted?
+      name
+    end
+
+    def valid?
+      @errors.add(:name, :invalid) unless ["azure", "google"].include?(name)
+      @errors.add(:identifier, :blank) if identifier.blank?
+      @errors.add(:secret, :blank) if secret.blank?
+      @errors.none?
+    end
+
+    def save
+      return false unless valid?
+      config = Setting.plugin_openproject_openid_connect
+      config["providers"] ||= {}
+      config["providers"][name] = omniauth_provider.to_h
+      Setting.plugin_openproject_openid_connect = config
+      true
+    end
+
+    def destroy
+      config = Setting.plugin_openproject_openid_connect
+      config["providers"] ||= {}
+      config["providers"].delete(name)
+      Setting.plugin_openproject_openid_connect = config
+      true
+    end
+
+    # https://api.rubyonrails.org/classes/ActiveModel/Errors.html
+    def read_attribute_for_validation(attr)
+      send(attr)
+    end
+  end
+end

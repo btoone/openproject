@@ -1,0 +1,19 @@
+<% html_title(t(:label_administration), t('openid_connect.providers.label_edit')) -%>
+<% local_assigns[:additional_breadcrumb] = [
+  link_to(t('openid_connect.providers.plural'), url_for(action: :index)),
+  t('openid_connect.providers.label_edit')
+  ]
+%>
+
+<%= toolbar title: t('openid_connect.providers.label_edit', name: @provider.name) %>
+
+<%= error_messages_for @provider %>
+
+<%= labelled_tabular_form_for @provider,
+                              html: { class: 'form', autocomplete: 'off' } do |f| %>
+  <%= render partial: "form", locals: { f: f } %>
+  <p>
+    <%= styled_button_tag l(:button_save), class: '-highlight -with-icon icon-checkmark' %>
+    <%= link_to t(:button_cancel), { action: :index }, class: 'button' %>
+  </p>
+<% end %>
