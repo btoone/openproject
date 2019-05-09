@@ -32,6 +32,10 @@ module OpenIDConnect
       self.new(NewProvider.new(params))
     end
 
+    def new_record?
+      !persisted?
+    end
+
     def persisted?
       omniauth_provider.kind_of?(OmniAuth::OpenIDConnect::Provider)
     end
@@ -42,7 +46,7 @@ module OpenIDConnect
     end
 
     def valid?
-      @errors.add(:name, :invalid) unless ["azure", "google"].include?(name)
+      @errors.add(:name, :invalid) unless ALLOWED_TYPES.include?(name)
       @errors.add(:identifier, :blank) if identifier.blank?
       @errors.add(:secret, :blank) if secret.blank?
       @errors.none?
@@ -50,8 +54,8 @@ module OpenIDConnect
 
     def save
       return false unless valid?
-      config = Setting.plugin_openproject_openid_connect
-      config["providers"] ||= {}
+      config = Setting.plugin_openproject_openid_connect || Hash.new
+      config["providers"] ||= Hash.new
       config["providers"][name] = omniauth_provider.to_h.stringify_keys
       Setting.plugin_openproject_openid_connect = config
       true
