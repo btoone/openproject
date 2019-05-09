@@ -63,7 +63,22 @@ module Concerns::OmniauthLogin
         session.delete :invitation_token
         u
       else
-        User.find_or_initialize_by identity_url: identity_url_from_omniauth(auth_hash)
+        user_attributes = omniauth_hash_to_user_attributes(auth_hash)
+        u = User.find_by(identity_url: user_attributes[:identity_url])
+        if u.nil?
+          # Allow to map existing users with an Omniauth source if the login
+          # already exists, and no existing auth source or omniauth provider is
+          # linked
+          u = User.find_by(
+            login: user_attributes[:login],
+            identity_url: nil,
+            auth_source_id: nil
+          )
+        end
+        if u.nil?
+          u = User.new identity_url: user_attributes[:identity_url]
+        end
+        u
       end
 
     decision = OpenProject::OmniAuth::Authorization.authorized? auth_hash
