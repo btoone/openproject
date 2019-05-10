@@ -74,6 +74,7 @@ module Concerns::OmniauthLogin
             identity_url: nil,
             auth_source_id: nil
           )
+          u.update_attribute :identity_url, user_attributes[:identity_url]
         end
         if u.nil?
           u = User.new identity_url: user_attributes[:identity_url]
