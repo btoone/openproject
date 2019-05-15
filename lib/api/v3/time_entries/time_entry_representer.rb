@@ -33,6 +33,8 @@ module API
     module TimeEntries
       class TimeEntryRepresenter < ::API::Decorators::Single
         include API::Decorators::LinkedResource
+        include API::Decorators::FormattableProperty
+        include API::Decorators::DateProperty
         extend ::API::V3::Utilities::CustomFieldInjector::RepresenterClass
 
         self_link title_getter: ->(*) { nil }
@@ -59,8 +61,9 @@ module API
 
         property :id
 
-        property :comments,
-                 as: :comment
+        formattable_property :comments,
+                             as: :comment,
+                             plain: true
 
         property :spent_on,
                  exec_context: :decorator,
@@ -83,17 +86,10 @@ module API
                                                                                   'hours')
                  end
 
-        property :created_at,
-                 exec_context: :decorator,
-                 getter: ->(*) do
-                   datetime_formatter.format_datetime(represented.created_on, allow_nil: true)
-                 end
-
-        property :updated_at,
-                 exec_context: :decorator,
-                 getter: ->(*) do
-                   datetime_formatter.format_datetime(represented.updated_on, allow_nil: true)
-                 end
+        date_time_property :created_on,
+                           as: 'createdAt'
+        date_time_property :updated_on,
+                           as: 'updatedAt'
 
         associated_resource :project
 

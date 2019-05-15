@@ -33,6 +33,8 @@ module API
   module V3
     module Documents
       class DocumentRepresenter < ::API::Decorators::Single
+        include API::Decorators::DateProperty
+        include API::Decorators::FormattableProperty
         include API::Decorators::LinkedResource
         include API::Caching::CachedRepresenter
         include ::API::V3::Attachments::AttachableRepresenterMixin
@@ -46,20 +48,10 @@ module API
 
         property :title
 
-        property :description,
-                 exec_context: :decorator,
-                 getter: ->(*) {
-                   ::API::Decorators::Formattable.new(represented.description, object: represented)
-                 },
-                 uncacheable: true,
-                 render_nil: true
+        formattable_property :description,
+                             uncacheable: true
 
-        property :created_at,
-                 exec_context: :decorator,
-                 getter: ->(*) {
-                   next unless represented.created_on
-                   datetime_formatter.format_datetime(represented.created_on)
-                 }
+        date_time_property :created_at
 
         associated_resource :project,
                             link: ->(*) do
